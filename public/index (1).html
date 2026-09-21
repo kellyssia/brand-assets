@@ -1,0 +1,877 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Resident portal</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,400;9..144,500;9..144,600&family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    /* overwritten at runtime from the brand record */
+    --brand:#1B2A3A;
+    --accent:#2AA3BF;
+    --bg:#F4F6F7;
+    --bg-warm:#ECEFF1;
+    --card:#FFFFFF;
+    --border:#E2E7EA;
+    --ink:#20272E;
+    --muted:#6A757E;
+    --muted-soft:#98A2AA;
+    --ok:#2E9E6B;
+    --warn:#C8871B;
+    --serif:'Fraunces',Georgia,serif;
+    --sans:'Poppins',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+    --radius:14px;
+    --shadow:0 1px 2px rgba(20,30,40,.04), 0 8px 24px rgba(20,30,40,.06);
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{
+    background:var(--bg);color:var(--ink);
+    font-family:var(--sans);font-weight:300;
+    -webkit-font-smoothing:antialiased;
+  }
+  em{font-style:italic;color:var(--accent);font-weight:400}
+  button{font-family:inherit;cursor:pointer}
+  .hide{display:none !important}
+
+  /* ---------------- boot / error ---------------- */
+  #boot{
+    position:fixed;inset:0;display:grid;place-items:center;
+    background:var(--bg);z-index:100;text-align:center;padding:2rem;
+  }
+  #boot .dot{
+    width:8px;height:8px;border-radius:50%;background:var(--accent);
+    margin:0 auto 1rem;animation:pulse 1.2s ease-in-out infinite;
+  }
+  @keyframes pulse{0%,100%{opacity:.25;transform:scale(.8)}50%{opacity:1;transform:scale(1)}}
+  #boot p{color:var(--muted);font-size:.9rem;margin:0;max-width:34rem;line-height:1.6}
+
+  /* ---------------- login ---------------- */
+  #login{min-height:100vh;display:grid;grid-template-columns:1.15fr 1fr}
+  .login-art{
+    background:var(--brand) center/cover no-repeat;
+    position:relative;display:flex;align-items:flex-end;padding:3.5rem;
+  }
+  .login-art::after{
+    content:'';position:absolute;inset:0;
+    background:linear-gradient(180deg,rgba(0,0,0,.05) 0%,rgba(0,0,0,.55) 100%);
+  }
+  .login-art .quote{position:relative;z-index:1;color:#fff;max-width:26rem}
+  .login-art h2{
+    font-family:var(--serif);font-weight:300;font-size:clamp(1.8rem,3vw,2.6rem);
+    line-height:1.18;margin:0 0 .75rem;
+  }
+  .login-art h2 em{color:#fff;font-weight:400}
+  .login-art p{margin:0;opacity:.8;font-size:.92rem;line-height:1.6}
+
+  .login-form{display:flex;flex-direction:column;justify-content:center;padding:3.5rem 4rem}
+  .login-form .mark{margin-bottom:2.75rem}
+  .login-form .mark img{max-height:42px;width:auto;display:block}
+  .login-form .mark .wordmark{
+    font-family:var(--serif);font-size:1.45rem;color:var(--brand);letter-spacing:.02em;
+  }
+  .login-form h1{
+    font-family:var(--serif);font-weight:400;font-size:1.6rem;margin:0 0 .4rem;
+  }
+  .login-form .sub{color:var(--muted);font-size:.9rem;margin:0 0 2.25rem}
+  label{display:block;font-size:.76rem;color:var(--muted);margin:0 0 .4rem;letter-spacing:.02em}
+  input,select{
+    width:100%;padding:.85rem 1rem;border:1px solid var(--border);border-radius:9px;
+    font-family:inherit;font-size:.92rem;background:var(--card);color:var(--ink);
+    margin-bottom:1.1rem;
+  }
+  input:focus,select:focus{outline:2px solid var(--accent);outline-offset:1px;border-color:transparent}
+  .btn{
+    width:100%;padding:.95rem;border:none;border-radius:9px;
+    background:var(--brand);color:#fff;font-size:.86rem;font-weight:500;
+    letter-spacing:.06em;transition:opacity .15s,transform .15s;
+  }
+  .btn:hover{opacity:.9}
+  .btn:active{transform:translateY(1px)}
+  .btn.ghost{background:transparent;color:var(--brand);border:1px solid var(--border)}
+  .btn.accent{background:var(--accent)}
+  .login-note{margin-top:1.5rem;font-size:.74rem;color:var(--muted-soft);line-height:1.6}
+
+  /* ---------------- chrome ---------------- */
+  header.top{
+    position:sticky;top:0;z-index:20;background:rgba(255,255,255,.88);
+    backdrop-filter:blur(10px);border-bottom:1px solid var(--border);
+    display:flex;align-items:center;justify-content:space-between;
+    padding:.9rem 2.25rem;
+  }
+  header.top .mark img{max-height:32px;width:auto;display:block}
+  header.top .mark .wordmark{font-family:var(--serif);font-size:1.15rem;color:var(--brand)}
+  .who{display:flex;align-items:center;gap:.7rem;font-size:.82rem;color:var(--muted)}
+  .avatar{
+    width:32px;height:32px;border-radius:50%;background:var(--brand);color:#fff;
+    display:grid;place-items:center;font-size:.72rem;font-weight:500;letter-spacing:.04em;
+  }
+  .linkish{background:none;border:none;color:var(--muted);font-size:.78rem;padding:0}
+  .linkish:hover{color:var(--ink)}
+
+  main{max-width:1080px;margin:0 auto;padding:2.5rem 2.25rem 5rem}
+
+  .greet{display:flex;align-items:flex-start;justify-content:space-between;gap:2rem;margin-bottom:2.75rem}
+  .greet h1{
+    font-family:var(--serif);font-weight:300;font-size:clamp(1.9rem,3.4vw,2.7rem);
+    margin:0 0 .35rem;line-height:1.15;
+  }
+  .greet .addr{color:var(--muted);font-size:.9rem;margin:0}
+  .datecard{
+    background:var(--card);border:1px solid var(--border);border-radius:var(--radius);
+    padding:.9rem 1.2rem;text-align:center;box-shadow:var(--shadow);flex:0 0 auto;
+  }
+  .datecard .d{font-family:var(--serif);font-size:1.9rem;line-height:1;color:var(--brand)}
+  .datecard .m{font-size:.7rem;color:var(--muted);margin-top:.25rem}
+
+  section.block{margin-bottom:2.75rem}
+  .block-head{display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:1.1rem;gap:1rem}
+  .eyebrow{font-size:.68rem;letter-spacing:.14em;color:var(--accent);margin-bottom:.25rem}
+  .block-title{font-family:var(--serif);font-size:1.3rem;font-weight:400}
+
+  .card{
+    background:var(--card);border:1px solid var(--border);border-radius:var(--radius);
+    box-shadow:var(--shadow);overflow:hidden;
+  }
+  .grid{display:grid;gap:1rem}
+  .grid.two{grid-template-columns:repeat(2,1fr)}
+  .grid.three{grid-template-columns:repeat(3,1fr)}
+
+  /* property */
+  .prop{display:grid;grid-template-columns:1.1fr 1fr}
+  .prop .art{background:var(--bg-warm) center/cover no-repeat;min-height:210px}
+  .prop .body{padding:1.6rem 1.75rem}
+  .prop h3{font-family:var(--serif);font-weight:400;font-size:1.3rem;margin:0 0 .3rem}
+  .prop .loc{color:var(--muted);font-size:.86rem;margin:0 0 1.2rem}
+  .kv{display:flex;justify-content:space-between;padding:.55rem 0;border-top:1px solid var(--border);font-size:.85rem}
+  .kv .k{color:var(--muted)}
+  .kv .v{font-weight:400}
+
+  /* charges */
+  .charge{padding:1.6rem 1.75rem;display:flex;align-items:center;justify-content:space-between;gap:2rem;flex-wrap:wrap}
+  .charge .amt{font-family:var(--serif);font-size:2.1rem;color:var(--brand);line-height:1}
+  .charge .amt .ccy{font-size:.95rem;color:var(--muted);margin-right:.4rem;font-family:var(--sans)}
+  .charge .meta{font-size:.82rem;color:var(--muted);margin-top:.45rem}
+  .charge .meta .mono{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.78rem}
+  .pill{
+    display:inline-block;padding:.25rem .65rem;border-radius:999px;
+    font-size:.68rem;letter-spacing:.06em;
+  }
+  .pill.due{background:rgba(200,135,27,.12);color:var(--warn)}
+  .pill.paid{background:rgba(46,158,107,.12);color:var(--ok)}
+  .charge .act{flex:0 0 auto;min-width:170px}
+
+  /* tiles */
+  .tile{padding:1.15rem 1.25rem}
+  .tile .name{font-weight:500;font-size:.95rem;margin-bottom:.2rem}
+  .tile .status{font-size:.7rem;letter-spacing:.06em;color:var(--accent);margin-bottom:.5rem}
+  .tile .detail{font-size:.82rem;color:var(--muted);line-height:1.5}
+  .tile .thumb{height:104px;background:var(--bg-warm) center/cover no-repeat;margin:-1.15rem -1.25rem 1rem}
+
+  .exp .thumb{height:150px}
+  .exp .title{font-family:var(--serif);font-size:1.05rem;margin:.1rem 0 .35rem}
+
+  .empty{padding:1.5rem 1.75rem;color:var(--muted-soft);font-size:.86rem}
+
+  /* services */
+  .svc{padding:1.5rem 1.75rem}
+  .svc p{margin:0 0 1rem;color:var(--muted);font-size:.86rem;line-height:1.6}
+  .chiprow{display:flex;flex-wrap:wrap;gap:.5rem}
+  .chip{
+    border:1px solid var(--border);background:var(--card);border-radius:999px;
+    padding:.45rem .9rem;font-size:.8rem;color:var(--ink);
+  }
+  .chip:hover{border-color:var(--accent);color:var(--accent)}
+
+  /* concierge bar */
+  .concierge{
+    position:fixed;left:0;right:0;bottom:0;z-index:30;
+    background:var(--brand);color:#fff;
+    display:flex;align-items:center;justify-content:space-between;gap:1rem;
+    padding:.7rem 2.25rem;font-size:.82rem;
+  }
+  .concierge .who2{display:flex;align-items:center;gap:.6rem}
+  .concierge .dot{width:7px;height:7px;border-radius:50%;background:var(--accent)}
+  .concierge .note{opacity:.6;font-size:.74rem}
+
+  /* faces */
+  .avatar{overflow:hidden}
+  .avatar img{width:100%;height:100%;object-fit:cover;display:block}
+  .greet-left{display:flex;align-items:center;gap:1.25rem}
+  .greet-photo{
+    width:72px;height:72px;border-radius:50%;flex:0 0 auto;
+    background:var(--brand) center/cover no-repeat;
+    box-shadow:0 0 0 3px var(--card),0 0 0 4px var(--border);
+  }
+  .face{
+    width:28px;height:28px;border-radius:50%;flex:0 0 auto;
+    background:var(--bg-warm) center/cover no-repeat;border:2px solid rgba(255,255,255,.7);
+  }
+
+  /* next best actions */
+  .nba{
+    padding:1.35rem 1.5rem;display:flex;flex-direction:column;gap:.5rem;
+    border-left:3px solid var(--accent);
+  }
+  .nba .tag{font-size:.64rem;letter-spacing:.14em;color:var(--accent)}
+  .nba h4{font-family:var(--serif);font-weight:400;font-size:1.08rem;margin:0;line-height:1.3}
+  .nba p{margin:0;color:var(--muted);font-size:.84rem;line-height:1.55;flex:1}
+  .nba .go{
+    align-self:flex-start;margin-top:.5rem;background:none;border:none;padding:0;
+    color:var(--brand);font-size:.8rem;font-weight:500;letter-spacing:.03em;
+  }
+  .nba .go:hover{color:var(--accent)}
+
+  /* service requests */
+  .sr-wrap{padding:1.4rem 1.6rem}
+  .sr-head{font-size:.66rem;letter-spacing:.14em;color:var(--muted);margin-bottom:1rem}
+  .sr{display:flex;gap:.9rem;align-items:flex-start;padding:.9rem 0;border-top:1px solid var(--border)}
+  .sr:first-of-type{border-top:none;padding-top:0}
+  .sr .ico{
+    width:38px;height:38px;border-radius:10px;background:var(--bg-warm);
+    display:grid;place-items:center;flex:0 0 auto;color:var(--brand);font-size:1rem;
+  }
+  .sr .t{font-weight:500;font-size:.9rem;margin-bottom:.15rem}
+  .sr .s{font-size:.8rem;color:var(--muted);line-height:1.5}
+  .sr .st{margin-left:auto;flex:0 0 auto}
+  .sr-note{
+    margin-top:1rem;padding-top:1rem;border-top:1px solid var(--border);
+    display:flex;align-items:center;gap:.6rem;font-size:.78rem;color:var(--muted);line-height:1.5;
+  }
+  .sr-note strong{color:var(--ink);font-weight:500}
+  .pill.prog{background:rgba(42,163,191,.12);color:var(--accent)}
+  .pill.sched{background:rgba(200,135,27,.12);color:var(--warn)}
+  .pill.done{background:rgba(46,158,107,.12);color:var(--ok)}
+  .sr-new{margin-top:1.1rem}
+
+  /* upcoming */
+  .up-wrap{padding:1.4rem 1.6rem}
+  .up{display:flex;gap:1rem;align-items:center;padding:.75rem 0;border-top:1px solid var(--border)}
+  .up:first-of-type{border-top:none;padding-top:0}
+  .up .cal{
+    width:46px;flex:0 0 auto;text-align:center;border:1px solid var(--border);
+    border-radius:9px;overflow:hidden;background:var(--card);
+  }
+  .up .cal .m{background:var(--brand);color:#fff;font-size:.6rem;letter-spacing:.1em;padding:.2rem 0}
+  .up .cal .d{font-family:var(--serif);font-size:1.15rem;padding:.25rem 0;color:var(--brand)}
+  .up .t{font-weight:500;font-size:.88rem;margin-bottom:.1rem}
+  .up .s{font-size:.78rem;color:var(--muted)}
+
+  /* modal */
+  .overlay{
+    position:fixed;inset:0;background:rgba(18,24,30,.5);z-index:60;
+    display:grid;place-items:center;padding:1.5rem;
+  }
+  .sheet{
+    background:var(--card);border-radius:var(--radius);max-width:440px;width:100%;
+    box-shadow:0 20px 60px rgba(0,0,0,.2);overflow:hidden;
+  }
+  .sheet .head{padding:1.5rem 1.75rem 0}
+  .sheet h3{font-family:var(--serif);font-weight:400;font-size:1.3rem;margin:0 0 .3rem}
+  .sheet .sub{color:var(--muted);font-size:.85rem;margin:0}
+  .sheet .body{padding:1.5rem 1.75rem}
+  .sheet .foot{padding:0 1.75rem 1.75rem;display:flex;gap:.6rem}
+  .sheet .foot .btn{flex:1}
+  .amtbox{
+    background:var(--bg-warm);border-radius:10px;padding:1.2rem;text-align:center;margin-bottom:1.25rem;
+  }
+  .amtbox .big{font-family:var(--serif);font-size:2.2rem;color:var(--brand);line-height:1}
+  .amtbox .big .ccy{font-family:var(--sans);font-size:.9rem;color:var(--muted);margin-right:.35rem}
+  .amtbox .cap{font-size:.78rem;color:var(--muted);margin-top:.4rem}
+  .tick{
+    width:52px;height:52px;border-radius:50%;background:rgba(46,158,107,.12);
+    display:grid;place-items:center;margin:0 auto 1rem;color:var(--ok);font-size:1.5rem;
+  }
+
+  .toast{
+    position:fixed;bottom:5rem;left:50%;transform:translateX(-50%) translateY(20px);
+    background:var(--ink);color:#fff;padding:.8rem 1.4rem;border-radius:999px;
+    font-size:.84rem;opacity:0;pointer-events:none;transition:opacity .25s,transform .25s;z-index:70;
+  }
+  .toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
+
+  @media (max-width:900px){
+    #login{grid-template-columns:1fr}
+    .login-art{min-height:240px;padding:2rem}
+    .login-form{padding:2.5rem 1.75rem}
+    .prop{grid-template-columns:1fr}
+    .grid.two,.grid.three{grid-template-columns:1fr}
+    main{padding:1.75rem 1.25rem 6rem}
+    header.top{padding:.8rem 1.25rem}
+    .concierge{padding:.7rem 1.25rem}
+  }
+  @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+
+<!-- boot / failure -->
+<div id="boot"><div><div class="dot"></div><p id="boot-msg">Loading…</p></div></div>
+
+<!-- ============ LOGIN ============ -->
+<div id="login" class="hide">
+  <div class="login-art" id="login-art">
+    <div class="quote">
+      <h2 id="login-headline"></h2>
+      <p id="login-tagline"></p>
+    </div>
+  </div>
+  <div class="login-form">
+    <div class="mark" id="login-mark"></div>
+    <h1>Resident sign in</h1>
+    <p class="sub">Your home, your community, your account.</p>
+    <label for="email">Email</label>
+    <input id="email" type="email" autocomplete="username">
+    <label for="pw">Password</label>
+    <input id="pw" type="password" value="••••••••••" autocomplete="current-password">
+    <button class="btn" onclick="signIn()">Sign in</button>
+    <p class="login-note">Demonstration environment. Any password works — no credentials are checked or stored.</p>
+  </div>
+</div>
+
+<!-- ============ DASHBOARD ============ -->
+<div id="app" class="hide">
+  <header class="top">
+    <div class="mark" id="top-mark"></div>
+    <div class="who">
+      <div class="avatar" id="initials"></div>
+      <span id="who-name"></span>
+      <button class="linkish" onclick="signOut()">Sign out</button>
+    </div>
+  </header>
+
+  <main>
+    <div class="greet">
+      <div class="greet-left">
+        <div class="greet-photo hide" id="greet-photo"></div>
+        <div>
+          <h1><span id="greeting">Welcome back</span>, <em id="first-name"></em></h1>
+          <p class="addr" id="greet-addr"></p>
+        </div>
+      </div>
+      <div class="datecard">
+        <div class="d" id="date-d"></div>
+        <div class="m" id="date-m"></div>
+      </div>
+    </div>
+
+    <!-- next best actions -->
+    <section class="block" id="block-nba">
+      <div class="block-head">
+        <div><div class="eyebrow">For you</div><div class="block-title">Suggested next steps</div></div>
+      </div>
+      <div class="grid two" id="nba-grid"></div>
+    </section>
+
+    <!-- property -->
+    <section class="block">
+      <div class="block-head">
+        <div><div class="eyebrow">Property</div><div class="block-title">Your home</div></div>
+      </div>
+      <div class="card prop">
+        <div class="art" id="prop-art"></div>
+        <div class="body">
+          <h3 id="prop-label"></h3>
+          <p class="loc" id="prop-addr"></p>
+          <div class="kv"><span class="k">Type</span><span class="v" id="prop-type"></span></div>
+          <div class="kv"><span class="k">Resident</span><span class="v" id="prop-resident"></span></div>
+          <div class="kv"><span class="k">Contact</span><span class="v" id="prop-contact"></span></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- charges -->
+    <section class="block" id="block-charge">
+      <div class="block-head">
+        <div><div class="eyebrow">Payments</div><div class="block-title">Community fee</div></div>
+      </div>
+      <div class="card charge">
+        <div>
+          <div class="amt"><span class="ccy" id="ccy"></span><span id="charge-amt"></span></div>
+          <div class="meta">
+            <span id="charge-label"></span> ·
+            <span class="mono" id="charge-ref"></span>
+          </div>
+          <div class="meta" style="margin-top:.6rem">
+            <span class="pill due" id="charge-pill"></span>
+          </div>
+        </div>
+        <div class="act"><button class="btn" onclick="openPay()">Pay now</button></div>
+      </div>
+    </section>
+
+    <!-- ecosystem -->
+    <section class="block" id="block-eco">
+      <div class="block-head">
+        <div><div class="eyebrow">Membership</div><div class="block-title">Across the group</div></div>
+      </div>
+      <div class="grid three" id="eco-grid"></div>
+    </section>
+
+    <!-- experiences -->
+    <section class="block" id="block-exp">
+      <div class="block-head">
+        <div><div class="eyebrow">Lifestyle</div><div class="block-title">Curated for you</div></div>
+      </div>
+      <div class="grid two" id="exp-grid"></div>
+    </section>
+
+    <!-- community & facilities -->
+    <section class="block" id="block-svc">
+      <div class="block-head">
+        <div><div class="eyebrow">Community &amp; facilities</div><div class="block-title">Your home services</div></div>
+      </div>
+      <div class="grid two">
+        <div class="card sr-wrap">
+          <div class="sr-head" id="sr-head">Open service requests</div>
+          <div id="sr-list"></div>
+          <div class="sr-note hide" id="sr-note"></div>
+          <div class="sr-new">
+            <div class="chiprow" id="svc-chips"></div>
+          </div>
+        </div>
+        <div class="card up-wrap" id="up-card">
+          <div class="sr-head">Upcoming</div>
+          <div id="up-list"></div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <div class="concierge">
+    <div class="who2"><div class="face hide" id="concierge-face"></div><span class="dot" id="concierge-dot"></span><span id="concierge-line"></span></div>
+    <span class="note" id="concierge-note"></span>
+  </div>
+</div>
+
+<!-- payment -->
+<div class="overlay hide" id="pay-overlay">
+  <div class="sheet">
+    <div id="pay-step-1">
+      <div class="head"><h3>Confirm payment</h3><p class="sub">Review the details before you pay.</p></div>
+      <div class="body">
+        <div class="amtbox">
+          <div class="big"><span class="ccy" id="pay-ccy"></span><span id="pay-amt"></span></div>
+          <div class="cap" id="pay-cap"></div>
+        </div>
+        <div class="kv" style="border-top:none"><span class="k">Property</span><span class="v" id="pay-prop"></span></div>
+        <div class="kv"><span class="k">Reference</span><span class="v" id="pay-ref"></span></div>
+        <div class="kv"><span class="k">Due</span><span class="v" id="pay-due"></span></div>
+        <div style="margin-top:1.25rem">
+          <label for="method">Payment method</label>
+          <select id="method">
+            <option>Visa ending 4417</option>
+            <option>Mastercard ending 2208</option>
+            <option>Bank transfer</option>
+          </select>
+        </div>
+      </div>
+      <div class="foot">
+        <button class="btn ghost" onclick="closePay()">Cancel</button>
+        <button class="btn" onclick="confirmPay()">Pay now</button>
+      </div>
+    </div>
+    <div id="pay-step-2" class="hide">
+      <div class="body" style="text-align:center;padding-top:2rem">
+        <div class="tick">✓</div>
+        <h3 style="font-family:var(--serif);font-weight:400;margin:0 0 .4rem">Payment confirmed</h3>
+        <p class="sub" style="margin:0 0 1.5rem">A receipt is on its way to your inbox.</p>
+        <div class="amtbox">
+          <div class="big"><span class="ccy" id="ok-ccy"></span><span id="ok-amt"></span></div>
+          <div class="cap" id="ok-ref"></div>
+        </div>
+      </div>
+      <div class="foot"><button class="btn" onclick="closePay()">Done</button></div>
+    </div>
+  </div>
+</div>
+
+<!-- service request -->
+<div class="overlay hide" id="svc-overlay">
+  <div class="sheet">
+    <div class="head"><h3>New request</h3><p class="sub" id="svc-sub"></p></div>
+    <div class="body">
+      <label for="svc-detail">Anything we should know?</label>
+      <input id="svc-detail" placeholder="Optional">
+      <div class="kv" style="border-top:none"><span class="k">Property</span><span class="v" id="svc-prop"></span></div>
+    </div>
+    <div class="foot">
+      <button class="btn ghost" onclick="closeSvc()">Cancel</button>
+      <button class="btn accent" onclick="submitSvc()">Submit request</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+(function(){
+  'use strict';
+
+  var CONTROL_PLANE = 'https://mea-brand-control-plane-f3a65764344a.herokuapp.com';
+  var DEFAULT_BRAND = 'averion-me';
+
+  var B = null;           // the brand record
+  var brandKey = (new URLSearchParams(location.search).get('brand') || DEFAULT_BRAND)
+                   .trim().toLowerCase();
+
+  // ---------- helpers ----------
+  function $(id){ return document.getElementById(id); }
+  function esc(s){
+    return String(s == null ? '' : s).replace(/[&<>"']/g, function(c){
+      return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
+    });
+  }
+  function money(n, ccy){
+    if (n == null || n === '') return '';
+    try { return Number(n).toLocaleString(undefined, { maximumFractionDigits: 0 }); }
+    catch(e){ return String(n); }
+  }
+  function initials(name){
+    return String(name || '').split(/\s+/).filter(Boolean)
+      .slice(0,2).map(function(p){ return p[0]; }).join('').toUpperCase();
+  }
+  function firstName(name){ return String(name || '').split(/\s+/)[0] || ''; }
+  function greetingFor(h){
+    if (h < 12) return 'Good morning';
+    if (h < 18) return 'Good afternoon';
+    return 'Good evening';
+  }
+  function periodWord(p){
+    if (p === 'quarterly') return 'per quarter';
+    if (p === 'monthly')   return 'per month';
+    if (p === 'annual')    return 'per year';
+    return '';
+  }
+  // a small glyph for a service request, from its title
+  function iconFor(title){
+    var t = String(title || '').toLowerCase();
+    if (/air ?con|ac\b|cool|hvac/.test(t)) return '❄';
+    if (/plumb|leak|water|pipe/.test(t))    return '💧';
+    if (/electric|power|light/.test(t))     return '⚡';
+    if (/door|lock|key|access/.test(t))     return '🔑';
+    return '🔧';
+  }
+  function statusClass(s){
+    var t = String(s || '').toLowerCase();
+    if (/resolv|complete|done|closed/.test(t)) return 'done';
+    if (/sched|book|pending/.test(t))          return 'sched';
+    return 'prog';
+  }
+  // photo for a named person, if we have one for them
+  function faceFor(name, b){
+    if (!name) return '';
+    if (name === b.concierge)        return b.conciergeImageUrl || '';
+    if (name === b.communityManager) return b.communityManagerImageUrl || '';
+    return '';
+  }
+  // an NBA button either pays, raises a request, or acknowledges
+  function runAction(a){
+    var label = String((a && a.actionLabel) || '').toLowerCase();
+    var title = String((a && a.title) || '').toLowerCase();
+    if (/pay/.test(label) || /fee|charge|payment/.test(title)) { window.openPay(); return; }
+    if (/book|schedul|service|request/.test(label + ' ' + title)) { window.openSvc(a.title); return; }
+    toast('Done — we\u2019ll follow up shortly.');
+  }
+
+  function toast(msg){
+    var t = $('toast');
+    t.textContent = msg; t.classList.add('on');
+    setTimeout(function(){ t.classList.remove('on'); }, 2600);
+  }
+  function markup(container, logoUrl, name){
+    container.innerHTML = logoUrl
+      ? '<img src="' + esc(logoUrl) + '" alt="' + esc(name) + '">'
+      : '<div class="wordmark">' + esc(name) + '</div>';
+  }
+
+  // ---------- theme ----------
+  function applyTheme(b){
+    var r = document.documentElement.style;
+    if (b.primaryColor)    r.setProperty('--brand', b.primaryColor);
+    if (b.accentColor)     r.setProperty('--accent', b.accentColor);
+    if (b.backgroundColor) r.setProperty('--bg', b.backgroundColor);
+    document.title = (b.name || 'Resident') + ' · Resident portal';
+  }
+
+  // ---------- render ----------
+  function renderLogin(b){
+    if (b.heroUrl) $('login-art').style.backgroundImage = "url('" + b.heroUrl + "')";
+    $('login-headline').textContent = b.headline || 'Your home, connected.';
+    $('login-tagline').textContent  = b.tagline || '';
+    markup($('login-mark'), b.logoUrl, b.name);
+    $('email').value = b.personaEmail || '';
+  }
+
+  function renderDashboard(b){
+    var now = new Date();
+
+    markup($('top-mark'), b.logoUrl, b.name);
+
+    // persona face — header avatar and greeting
+    if (b.personaImageUrl) {
+      $('initials').innerHTML = '<img src="' + esc(b.personaImageUrl) + '" alt="">';
+      $('greet-photo').style.backgroundImage = "url('" + b.personaImageUrl + "')";
+      $('greet-photo').classList.remove('hide');
+    } else {
+      $('initials').textContent = initials(b.personaName);
+    }
+
+    // next best actions
+    var nba = b.nextBestActions || [];
+    if (nba.length) {
+      $('nba-grid').innerHTML = nba.map(function(a, i){
+        return '<div class="card nba">' +
+          '<div class="tag">RECOMMENDED</div>' +
+          '<h4>' + esc(a.title) + '</h4>' +
+          (a.detail ? '<p>' + esc(a.detail) + '</p>' : '') +
+          (a.actionLabel ? '<button class="go" data-nba="' + i + '">' + esc(a.actionLabel) + ' →</button>' : '') +
+          '</div>';
+      }).join('');
+      Array.prototype.forEach.call(document.querySelectorAll('[data-nba]'), function(btn){
+        btn.addEventListener('click', function(){ runAction(nba[+btn.dataset.nba]); });
+      });
+    } else {
+      $('block-nba').classList.add('hide');
+    }
+    $('who-name').textContent  = b.personaName || '';
+    $('greeting').textContent  = greetingFor(now.getHours());
+    $('first-name').textContent = firstName(b.personaName);
+    $('greet-addr').textContent = [b.propertyLabel, b.propertyAddress].filter(Boolean).join(' · ');
+
+    $('date-d').textContent = now.getDate();
+    $('date-m').textContent = now.toLocaleString(undefined,{month:'long',year:'numeric'});
+
+    // property
+    if (b.heroUrl) $('prop-art').style.backgroundImage = "url('" + b.heroUrl + "')";
+    $('prop-label').textContent    = b.propertyLabel || '—';
+    $('prop-addr').textContent     = b.propertyAddress || '';
+    $('prop-type').textContent     = b.apartmentType || '—';
+    $('prop-resident').textContent = b.personaName || '—';
+    $('prop-contact').textContent  = b.personaPhone || b.personaEmail || '—';
+
+    // charge
+    if (b.currentCharge) {
+      $('ccy').textContent          = b.currency || '';
+      $('charge-amt').textContent   = money(b.currentCharge);
+      $('charge-label').textContent = b.chargeLabel || 'Community fee';
+      $('charge-ref').textContent   = b.chargeReference || '';
+      var per = periodWord(b.chargePeriod);
+      $('charge-pill').textContent  = (b.chargeDueDate ? 'Due ' + b.chargeDueDate : 'Due') +
+                                      (per ? ' · ' + per : '');
+    } else {
+      $('block-charge').classList.add('hide');
+    }
+
+    // ecosystem
+    var eco = b.ecosystemBrands || [];
+    if (eco.length) {
+      $('eco-grid').innerHTML = eco.map(function(e){
+        return '<div class="card tile">' +
+          (e.imageUrl ? '<div class="thumb" style="background-image:url(\'' + esc(e.imageUrl) + '\')"></div>' : '') +
+          '<div class="name">' + esc(e.brand) + '</div>' +
+          (e.status ? '<div class="status">' + esc(e.status) + '</div>' : '') +
+          (e.detail ? '<div class="detail">' + esc(e.detail) + '</div>' : '') +
+          '</div>';
+      }).join('');
+    } else {
+      $('block-eco').classList.add('hide');
+    }
+
+    // experiences
+    var exp = b.experiences || [];
+    if (exp.length) {
+      $('exp-grid').innerHTML = exp.map(function(x){
+        return '<div class="card tile exp">' +
+          (x.imageUrl ? '<div class="thumb" style="background-image:url(\'' + esc(x.imageUrl) + '\')"></div>' : '') +
+          (x.brand ? '<div class="status">' + esc(x.brand) + '</div>' : '') +
+          '<div class="title">' + esc(x.title) + '</div>' +
+          (x.description ? '<div class="detail">' + esc(x.description) + '</div>' : '') +
+          '</div>';
+      }).join('');
+    } else {
+      $('block-exp').classList.add('hide');
+    }
+
+    // service requests
+    var reqs = b.serviceRequests || [];
+    if (reqs.length) {
+      $('sr-list').innerHTML = reqs.map(function(r){
+        return '<div class="sr">' +
+          '<div class="ico">' + iconFor(r.title) + '</div>' +
+          '<div><div class="t">' + esc(r.title) + '</div>' +
+          (r.detail ? '<div class="s">' + esc(r.detail) + '</div>' : '') +
+          '</div>' +
+          (r.status ? '<div class="st"><span class="pill ' + statusClass(r.status) + '">' +
+            esc(r.status) + '</span></div>' : '') +
+          '</div>';
+      }).join('');
+
+      // the coordinating note uses the first request's reference and owner
+      var r0 = reqs[0], bits = [];
+      if (r0.reported)  bits.push('Reported ' + esc(r0.reported));
+      if (r0.reference) bits.push('Ref <strong>' + esc(r0.reference) + '</strong>');
+      var owner = r0.owner || b.communityManager;
+      if (owner) bits.push('<strong>' + esc(owner) + '</strong> is coordinating');
+      if (bits.length) {
+        var face = faceFor(owner, b);
+        $('sr-note').innerHTML = (face ? '<div class="face" style="background-image:url(\'' +
+          esc(face) + '\')"></div>' : '') + '<div>' + bits.join(' · ') + '</div>';
+        $('sr-note').classList.remove('hide');
+      }
+    } else {
+      $('sr-head').textContent = 'Service requests';
+      $('sr-list').innerHTML = '<div class="s" style="color:var(--muted-soft);font-size:.85rem">No open requests.</div>';
+    }
+
+    // raise a new one — brand-specific issues, or a generic set
+    var svc = (b.serviceIssues && b.serviceIssues.length)
+      ? b.serviceIssues
+      : ['Air conditioning', 'Plumbing', 'Electrical', 'Something else'];
+    $('svc-chips').innerHTML = svc.map(function(s){
+      return '<button class="chip" data-issue="' + esc(s) + '">' + esc(s) + '</button>';
+    }).join('');
+    Array.prototype.forEach.call(document.querySelectorAll('#svc-chips .chip'), function(c){
+      c.addEventListener('click', function(){ openSvc(c.dataset.issue); });
+    });
+
+    // upcoming
+    var up = b.upcoming || [];
+    if (up.length) {
+      $('up-list').innerHTML = up.map(function(u){
+        return '<div class="up">' +
+          '<div class="cal"><div class="m">' + esc(u.month) + '</div><div class="d">' + esc(u.day) + '</div></div>' +
+          '<div><div class="t">' + esc(u.title) + '</div>' +
+          (u.detail ? '<div class="s">' + esc(u.detail) + '</div>' : '') +
+          '</div></div>';
+      }).join('');
+    } else {
+      $('up-card').classList.add('hide');
+    }
+
+    // concierge bar
+    if (b.conciergeImageUrl) {
+      $('concierge-face').style.backgroundImage = "url('" + b.conciergeImageUrl + "')";
+      $('concierge-face').classList.remove('hide');
+      $('concierge-dot').classList.add('hide');
+    }
+    $('concierge-line').textContent = b.concierge
+      ? b.concierge + ' is ready to help'
+      : 'Your concierge is ready to help';
+    bootConcierge(b);
+  }
+
+  // ---------- concierge (Agentforce messaging for web) ----------
+  // The four bootstrap values come from the brand record once the control
+  // plane deploys a web chat for this brand. Until they exist, the bar is
+  // shown but no chat is booted.
+  function bootConcierge(b){
+    var orgId   = b.eswOrgId;
+    var devName = b.eswConfigDevName;
+    var baseUrl = b.eswBaseCoreUrl;
+    var scrt2   = b.eswScrt2Url;
+
+    if (!orgId || !devName || !baseUrl || !scrt2) {
+      $('concierge-note').textContent = 'Chat not configured for this brand';
+      return;
+    }
+    $('concierge-note').textContent = '';
+
+    var s = document.createElement('script');
+    s.src = baseUrl.replace(/\/$/, '') + '/assets/js/bootstrap.min.js';
+    s.onload = function(){
+      try {
+        window.embeddedservice_bootstrap.settings.language = 'en_US';
+        window.embeddedservice_bootstrap.init(orgId, devName, baseUrl, { scrt2URL: scrt2 });
+      } catch (err) {
+        console.error('[concierge] init failed:', err);
+        $('concierge-note').textContent = 'Chat unavailable';
+      }
+    };
+    s.onerror = function(){
+      console.error('[concierge] bootstrap script failed to load');
+      $('concierge-note').textContent = 'Chat unavailable';
+    };
+    document.body.appendChild(s);
+  }
+
+  // ---------- flows ----------
+  window.signIn = function(){
+    $('login').classList.add('hide');
+    $('app').classList.remove('hide');
+    window.scrollTo(0,0);
+  };
+  window.signOut = function(){
+    $('app').classList.add('hide');
+    $('login').classList.remove('hide');
+    window.scrollTo(0,0);
+  };
+
+  window.openPay = function(){
+    $('pay-ccy').textContent  = B.currency || '';
+    $('pay-amt').textContent  = money(B.currentCharge);
+    $('pay-cap').textContent  = [B.chargeLabel, periodWord(B.chargePeriod)].filter(Boolean).join(' · ');
+    $('pay-prop').textContent = B.propertyLabel || '—';
+    $('pay-ref').textContent  = B.chargeReference || '—';
+    $('pay-due').textContent  = B.chargeDueDate || '—';
+    $('pay-step-1').classList.remove('hide');
+    $('pay-step-2').classList.add('hide');
+    $('pay-overlay').classList.remove('hide');
+  };
+  window.confirmPay = function(){
+    $('ok-ccy').textContent = B.currency || '';
+    $('ok-amt').textContent = money(B.currentCharge);
+    $('ok-ref').textContent = B.chargeReference || '';
+    $('pay-step-1').classList.add('hide');
+    $('pay-step-2').classList.remove('hide');
+    $('charge-pill').className = 'pill paid';
+    $('charge-pill').textContent = 'Paid';
+  };
+  window.closePay = function(){ $('pay-overlay').classList.add('hide'); };
+
+  window.openSvc = function(issue){
+    $('svc-sub').textContent  = issue || 'Tell us what you need.';
+    $('svc-prop').textContent = B.propertyLabel || '—';
+    $('svc-detail').value = '';
+    $('svc-overlay').classList.remove('hide');
+  };
+  window.closeSvc = function(){ $('svc-overlay').classList.add('hide'); };
+  window.submitSvc = function(){
+    closeSvc();
+    toast('Request logged — the community team will be in touch.');
+  };
+
+  [['pay-overlay', window.closePay], ['svc-overlay', window.closeSvc]].forEach(function(p){
+    $(p[0]).addEventListener('click', function(e){ if (e.target === this) p[1](); });
+  });
+  document.addEventListener('keydown', function(e){
+    if (e.key === 'Escape'){ window.closePay(); window.closeSvc(); }
+  });
+
+  // ---------- boot ----------
+  fetch(CONTROL_PLANE + '/api/brand/' + encodeURIComponent(brandKey))
+    .then(function(r){
+      if (r.status === 404) throw new Error('No brand "' + brandKey + '" in the control plane.');
+      if (!r.ok) throw new Error('Control plane returned ' + r.status + '.');
+      return r.json();
+    })
+    .then(function(b){
+      B = b;
+      applyTheme(b);
+      renderLogin(b);
+      renderDashboard(b);
+      $('boot').classList.add('hide');
+      $('login').classList.remove('hide');
+    })
+    .catch(function(err){
+      console.error('[brand] load failed:', err);
+      $('boot-msg').textContent = err.message +
+        ' Add ?brand=<key> to the URL, for example ?brand=averion-me.';
+    });
+})();
+</script>
+</body>
+</html>
